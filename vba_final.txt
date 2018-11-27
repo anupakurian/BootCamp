@@ -1,0 +1,220 @@
+
+Option Explicit
+'defining a custom type for the array
+
+Type Stock
+ ticker As String
+ openDate As Long
+ openValue As Double
+ closeDate As Long
+ closeValue As Double
+ yearlyChange As Double
+ yearlyChangePercent As Double
+ yearlyStockVolume As Double
+End Type
+
+Sub stockVolume()
+    Dim lastRow As Double
+    Dim ticker As String
+    Dim i As Double
+    Dim totalVolume As Double
+    Dim printRow As Double
+    Dim sht As Excel.Worksheet
+
+    'to print the row
+    lastRow = ActiveSheet.Cells(Rows.Count, "A").End(xlUp).Row
+
+    For Each sht In ActiveWorkbook.Worksheets
+    
+        Sheets(sht.Name).Select
+        lastRow = ActiveSheet.Cells(Rows.Count, "A").End(xlUp).Row
+    
+        'declare an array for storing the Ticker, opendate, OpenVal, Closing date, closing value, Yearly Change, %Change, Total Stock Vol,
+        Dim araStock(1 To 100000) As Stock
+        Dim araStockIndex As Double
+        araStockIndex = 1
+        
+         'to display the third part of the problem
+         Dim greatestPercentIncrease As Double
+         Dim greatestPercentIncreaseTicker As String
+         Dim greatestPercentDecrease As Double
+         Dim greatestPercentDecreaseTicker As String
+         Dim greatestTotalVolume As Double
+         Dim greatestTotalVolumeTicker As String
+         
+         'for getting the final numbers for greatest %incr %decrease and greatest stock volume
+         
+        greatestPercentIncrease = 0
+        greatestPercentIncreaseTicker = ""
+        greatestPercentDecrease = 0
+        greatestPercentDecreaseTicker = ""
+        greatestTotalVolume = 0
+        greatestTotalVolumeTicker = ""
+        
+        Cells(1, 9).Value = "Ticker"
+        Cells(1, 10).Value = "Yearly change"
+        Cells(1, 11).Value = "Percent change "
+        Cells(1, 12).Value = "Total Stock Volume"
+        
+        Cells(2, 15).Value = "Greatest % Increase"
+        Cells(3, 15).Value = "Greatest % Decrease"
+        Cells(4, 15).Value = "Greatest Total Volume"
+        Cells(1, 16).Value = "Ticker"
+        Cells(1, 17).Value = "Value"
+    
+    'populating the first row to the array
+    
+        araStock(araStockIndex).ticker = Cells(2, 1) ' Ticker Namer
+        araStock(araStockIndex).openDate = Cells(2, 2) ' Open Date
+        araStock(araStockIndex).openValue = Cells(2, 3).Value ' Opening value
+        araStock(araStockIndex).closeDate = Cells(2, 2).Value ' Closing date
+        araStock(araStockIndex).closeValue = Cells(2, 6).Value ' Closing value
+        araStock(araStockIndex).yearlyChange = 0 ' Yearly Change
+        araStock(araStockIndex).yearlyChangePercent = 0 ' % Change
+        araStock(araStockIndex).yearlyStockVolume = Cells(2, 7).Value ' Total Stock volume
+    
+    
+       
+        For i = 3 To lastRow ' start from 3rd row since 2nd row has already been populated
+            If Cells(i, 1) = araStock(araStockIndex).ticker Then
+                If Cells(i, 2).Value < araStock(araStockIndex).openDate Then
+                    araStock(araStockIndex).openValue = Cells(i, 3).Value
+                    araStock(araStockIndex).openDate = Cells(i, 2).Value
+                End If
+                If Cells(i, 2).Value >= araStock(araStockIndex).closeDate Then
+                    araStock(araStockIndex).closeValue = Cells(i, 6).Value
+                    araStock(araStockIndex).closeDate = Cells(i, 2).Value
+                End If
+                ' calculate the total value
+                araStock(araStockIndex).yearlyStockVolume = araStock(araStockIndex).yearlyStockVolume + Cells(i, 7)
+                
+            
+            Else ' row that is seen in the excel is different from the one in the array - when there is a change in ticker
+                ' first calculate the yearly change and % change
+                araStock(araStockIndex).yearlyChange = araStock(araStockIndex).closeValue - araStock(araStockIndex).openValue
+                If araStock(araStockIndex).openValue > 0 Then
+                    araStock(araStockIndex).yearlyChangePercent = araStock(araStockIndex).yearlyChange / araStock(araStockIndex).openValue
+                    
+                Else
+                    araStock(araStockIndex).yearlyChangePercent = 0
+                End If
+                
+                ' second print the row
+                Cells(araStockIndex + 1, 9).Value = araStock(araStockIndex).ticker
+                Cells(araStockIndex + 1, 10).Value = araStock(araStockIndex).yearlyChange
+                Cells(araStockIndex + 1, 11).Value = araStock(araStockIndex).yearlyChangePercent
+                Cells(araStockIndex + 1, 12).Value = araStock(araStockIndex).yearlyStockVolume
+                
+                'saving the lowest ,greatest percent and volumes
+                If araStock(araStockIndex).yearlyChangePercent > greatestPercentIncrease Then
+                    greatestPercentIncrease = araStock(araStockIndex).yearlyChangePercent
+                    greatestPercentIncreaseTicker = araStock(araStockIndex).ticker
+                End If
+                
+                If araStock(araStockIndex).yearlyChangePercent < greatestPercentDecrease Then
+                    greatestPercentDecrease = araStock(araStockIndex).yearlyChangePercent
+                    greatestPercentDecreaseTicker = araStock(araStockIndex).ticker
+                End If
+                
+                If araStock(araStockIndex).yearlyStockVolume > greatestTotalVolume Then
+                    greatestTotalVolume = araStock(araStockIndex).yearlyStockVolume
+                    greatestTotalVolumeTicker = araStock(araStockIndex).ticker
+                End If
+                
+                
+                
+                ' third populate the new row to the next line in the array
+                araStockIndex = araStockIndex + 1
+                araStock(araStockIndex).ticker = Cells(i, 1).Value  ' Ticker Namer
+                araStock(araStockIndex).openDate = Cells(i, 2).Value  ' Open Date
+                araStock(araStockIndex).openValue = Cells(i, 3).Value  ' Opening value
+                araStock(araStockIndex).closeDate = Cells(i, 2).Value  ' Closing date
+                araStock(araStockIndex).closeValue = Cells(i, 6).Value  ' Closing value
+                araStock(araStockIndex).yearlyChange = 0  ' Yearly Change
+                araStock(araStockIndex).yearlyChangePercent = 0  ' % Change
+                araStock(araStockIndex).yearlyStockVolume = Cells(i, 7).Value  ' Total Stock volume
+            End If
+        Next i
+        
+        'for the last row in the xl
+        ' first calculate the yearly change and % change
+        araStock(araStockIndex).yearlyChange = araStock(araStockIndex).closeValue - araStock(araStockIndex).openValue
+        If araStock(araStockIndex).openValue > 0 Then
+            araStock(araStockIndex).yearlyChangePercent = araStock(araStockIndex).yearlyChange / araStock(araStockIndex).openValue
+        Else
+            araStock(araStockIndex).yearlyChangePercent = 0
+        End If
+        
+         If araStock(araStockIndex).yearlyChangePercent > greatestPercentIncrease Then
+                greatestPercentIncrease = araStock(araStockIndex).yearlyChangePercent
+                greatestPercentIncreaseTicker = araStock(araStockIndex).ticker
+            End If
+            
+            If araStock(araStockIndex).yearlyChangePercent < greatestPercentDecrease Then
+                greatestPercentDecrease = araStock(araStockIndex).yearlyChangePercent
+                greatestPercentDecreaseTicker = araStock(araStockIndex).ticker
+            End If
+            
+            If araStock(araStockIndex).yearlyStockVolume > greatestTotalVolume Then
+                greatestTotalVolume = araStock(araStockIndex).yearlyStockVolume
+                greatestTotalVolumeTicker = araStock(araStockIndex).ticker
+            End If
+        ' second print the row
+        Cells(araStockIndex + 1, 9).Value = araStock(araStockIndex).ticker
+        Cells(araStockIndex + 1, 10).Value = araStock(araStockIndex).yearlyChange
+        Cells(araStockIndex + 1, 11).Value = araStock(araStockIndex).yearlyChangePercent
+        Cells(araStockIndex + 1, 12).Value = araStock(araStockIndex).yearlyStockVolume
+        
+        Cells(2, 17).Value = greatestPercentIncrease
+        Cells(2, 16).Value = greatestPercentIncreaseTicker
+        Cells(3, 17).Value = greatestPercentDecrease
+        Cells(3, 16).Value = greatestPercentDecreaseTicker
+        Cells(4, 17).Value = greatestTotalVolume
+        Cells(4, 16).Value = greatestTotalVolumeTicker
+        
+
+'Conditional formatting(The code for conditional formatting is generated using macro recording)
+'Remove all the conditional format that exists already
+
+        Cells.FormatConditions.Delete
+        
+        Range("J2").Select
+        Range(Selection, Selection.End(xlDown)).Select
+        Selection.FormatConditions.Add Type:=xlCellValue, Operator:=xlGreater, _
+            Formula1:="=0"
+        Selection.FormatConditions(Selection.FormatConditions.Count).SetFirstPriority
+        With Selection.FormatConditions(1).Font
+            .ThemeColor = xlThemeColorLight1
+            .TintAndShade = 0
+        End With
+        With Selection.FormatConditions(1).Interior
+            .PatternColorIndex = xlAutomatic
+            .ThemeColor = xlThemeColorAccent6
+            .TintAndShade = 0
+        End With
+        Selection.FormatConditions(1).StopIfTrue = False
+        Selection.FormatConditions.Add Type:=xlCellValue, Operator:=xlLess, _
+            Formula1:="=0"
+        Selection.FormatConditions(Selection.FormatConditions.Count).SetFirstPriority
+        With Selection.FormatConditions(1).Font
+            .Strikethrough = False
+            .ThemeColor = xlThemeColorLight1
+            .TintAndShade = 0
+        End With
+        With Selection.FormatConditions(1).Interior
+            .PatternColorIndex = xlAutomatic
+            .Color = 192
+            .TintAndShade = 0
+        End With
+        Selection.FormatConditions(1).StopIfTrue = False
+
+    Next sht
+End Sub
+
+
+
+
+
+
+
+
